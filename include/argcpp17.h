@@ -614,7 +614,6 @@ void parser::parse_options(std::vector<std::string>& args)
             case one_string:
             case equal_sign:
             case colon:
-                // TODO: add value
                 break;
             case whitespace:
                 it = args.erase(it);
