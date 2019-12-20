@@ -244,6 +244,8 @@ private:
     auto find_option(const std::string& arg, T begin, T end);
 
     void check_mandatory();
+    void check_keyword(const keyword& key);
+    auto check_value_type(const std::string& key, const std::string& arg);
 
     std::vector<keyword> m_keywords;
     std::vector<subcommand<parser>> m_subcommands;
@@ -436,39 +438,38 @@ parser& parser::get_subcommand_parser(const keyword& key)
     return get_subcommand(key)->get_parser();
 }
 
+void parser::check_keyword(const keyword& key)
+{
+    if (std::find(m_keywords.begin(), m_keywords.end(), key) != m_keywords.end())
+        throw argcpp17_exception(argcpp17_exception::err_duplicate_keyword);
+    m_keywords.push_back(key);
+}
+
 parser& parser::add_subcommand(const std::string& key, const std::string& description)
 {
     keyword kw = { key };
-    if (std::find(m_keywords.begin(), m_keywords.end(), kw) != m_keywords.end())
-        throw argcpp17_exception(argcpp17_exception::err_duplicate_keyword); 
-    m_keywords.push_back(kw);
+    check_keyword(kw);
     m_subcommands.push_back(subcommand<parser>(kw, description));
     return m_subcommands.back().get_parser();
 }
 
 parser& parser::add_flag(const keyword& key, const std::string& description)
 {
-    if (std::find(m_keywords.begin(), m_keywords.end(), key) != m_keywords.end())
-        throw argcpp17_exception(argcpp17_exception::err_duplicate_keyword); 
-    m_keywords.push_back(key);
+    check_keyword(key);
     m_flags.push_back(flag(key, description));
     return *this;
 }
 
 parser& parser::add_mandatory_argument(const keyword& key, const std::string& description)
 {
-    if (std::find(m_keywords.begin(), m_keywords.end(), key) != m_keywords.end())
-        throw argcpp17_exception(argcpp17_exception::err_duplicate_keyword); 
-    m_keywords.push_back(key);
+    check_keyword(key);
     m_mandatories.push_back(mandatory_argument(key, description));
     return *this;
 }
 
 parser& parser::add_optional_argument(const keyword& key, const std::string& description)
 {
-    if (std::find(m_keywords.begin(), m_keywords.end(), key) != m_keywords.end())
-        throw argcpp17_exception(argcpp17_exception::err_duplicate_keyword); 
-    m_keywords.push_back(key);
+    check_keyword(key);
     m_optionals.push_back(optional_argument(key, description));
     return *this;
 }
@@ -536,6 +537,16 @@ void parser::parse_flags(std::vector<std::string>& args)
     }
 }
 
+auto parser::check_value_type(const std::string& key, const std::string& arg)
+{
+    if (arg.substr(key.length(), 1) == "=")
+        return std::make_pair<>(parser::equal_sign, arg.substr(key.length() + 1));
+    else if (arg.substr(key.length(), 1) == ":")
+        return std::make_pair<>(parser::colon, arg.substr(key.length() + 1));
+    else
+        return std::make_pair<>(parser::one_string, arg.substr(key.length()));
+}
+
 template<class T>
 auto parser::find_option(const std::string& arg, T begin, T end)
 {
@@ -554,19 +565,7 @@ auto parser::find_option(const std::string& arg, T begin, T end)
 
         // argument as one string or with seperating char ('=' or ':')
         if (arg.length() > key.length() && arg.substr(0, key.length()) == key) {
-            // TODO: create function for this duplicate code
-            if (arg.substr(key.length(), 1) == "=") {
-                value_type = parser::equal_sign;
-                value = arg.substr(key.length() + 1);
-            }
-            else if (arg.substr(key.length(), 1) == ":") {
-                value_type = parser::colon;
-                value = arg.substr(key.length() + 1);
-            }
-            else {
-                value_type = parser::one_string;
-                value = arg.substr(key.length());
-            }
+            std::tie(value_type, value) = check_value_type(key, arg);
             return true;
         }
         
@@ -574,19 +573,7 @@ auto parser::find_option(const std::string& arg, T begin, T end)
             return false;
         auto abbr_val = abbr.value();
         if (arg.length() > abbr_val.length() && arg.substr(0, abbr_val.length()) == abbr_val) {
-            // TODO: create function for this duplicate code
-            if (arg.substr(abbr_val.length(), 1) == "=") {
-                value_type = parser::equal_sign;
-                value = arg.substr(abbr_val.length() + 1);
-            }
-            else if (arg.substr(abbr_val.length(), 1) == ":") {
-                value_type = parser::colon;
-                value = arg.substr(abbr_val.length() + 1);
-            }
-            else {
-                value_type = parser::one_string;
-                value = arg.substr(abbr_val.length());
-            }
+            std::tie(value_type, value) = check_value_type(abbr_val, arg);
             return true;
         }
         return false;
