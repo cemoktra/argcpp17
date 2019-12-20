@@ -15,10 +15,10 @@
 // DECLARATIONS
 // ====================================================
 
-template<class T>
+template<typename T>
 T parse_value(const std::string& value);
 
-template<class T>
+template<typename T>
 std::optional<T> parse_value(const std::optional<std::string>& value);
 
 // class representing an argcpp17 exception
@@ -98,7 +98,6 @@ protected:
     argument(const argument& rhs);
 
     inline void mark_parsed() { m_parsed = true; }
-    inline void update_keyword(const keyword& key) { m_key = key; }
 
 private:
     keyword m_key;
@@ -115,7 +114,7 @@ std::ostream& operator<<(std::ostream& os, const argument& command) {
 
 // class representing a subcommand consisting o f keyword, description and sub parser
 // use template here to resolve cyclic dependencies
-template<class T>
+template<typename T>
 class subcommand : public argument {
     friend class parser;
 
@@ -154,7 +153,7 @@ public:
     optional_argument(const optional_argument& rhs);
     ~optional_argument() = default;
 
-    template<class T>
+    template<typename T>
     inline std::optional<T> value() { return parse_value<T>(m_value); }
 
 protected:
@@ -177,7 +176,7 @@ public:
     mandatory_argument(const mandatory_argument& rhs);
     ~mandatory_argument() = default;
 
-    template<class T>
+    template<typename T>
     inline T value() { return parse_value<T>(m_value); }
 
 protected:
@@ -203,7 +202,7 @@ public:
     positional_argument(const positional_argument& rhs);
     ~positional_argument() = default;
 
-    template<class T>
+    template<typename T>
     inline T value() { return parse_value<T>(m_value); }
 
 protected:
@@ -240,6 +239,10 @@ public:
     parser& add_argument(const keyword& key, const std::string& description, bool optional = true);
     parser& add_positional(const std::string& name, const std::string& description);
 
+    template<typename T>
+    std::optional<T> get_value(const keyword& key);
+    bool get_flag(const keyword& key);
+
 protected:
     void parse_vector(std::vector<std::string>& args);
     
@@ -258,9 +261,12 @@ private:
     void parse_options(std::vector<std::string>& args);
     void parse_positionals(std::vector<std::string>& args);
 
-    auto find_option(const std::string& arg);
-    template<class T>
-    auto find_option(const std::string& arg, T begin, T end);
+    auto parse_argument_value(const std::string& arg);
+    template<typename T>
+    auto parse_argument_value(const std::string& arg, T begin, T end);
+
+    template<typename T>
+    auto find_option(const keyword& key, T begin, T end);
 
     void check_mandatory();
     void check_keyword(const keyword& key);
@@ -282,31 +288,19 @@ private:
 // ====================================================
 
 template<>
-intmax_t parse_value(const std::string& value)
+std::string parse_value(const std::string& value)
 {
-    char *endptr;
-    return strtoimax(value.c_str(), &endptr, 10);
+    return value;
 }
 
 
 template<>
-std::optional<intmax_t> parse_value(const std::optional<std::string>& value)
+std::optional<std::string> parse_value(const std::optional<std::string>& value)
 {
-    char *endptr;
-    if (!value.has_value())
-        return std::nullopt;
-    return strtoimax(value.value().c_str(), &endptr, 10);
+   return value;
 }
 
-
-template<>
-uintmax_t parse_value(const std::string& value)
-{
-    char *endptr;
-    return strtoumax(value.c_str(), &endptr, 10);
-}
-
-template<class T>
+template<typename T>
 T parse_value(const std::string& value)
 {
     std::istringstream iss(value);
@@ -316,15 +310,12 @@ T parse_value(const std::string& value)
 }
 
 
-template<class T>
+template<typename T>
 std::optional<T> parse_value(const std::optional<std::string>& value)
 {
     if (!value.has_value())
         return std::nullopt;
-    std::istringstream iss(value.value());
-    T casted;
-    iss >> casted;
-    return casted;
+    return parse_value<T>(value.value());
 }
 
 
@@ -447,7 +438,6 @@ keyword verify_argument_key(const keyword& key)
 optional_argument::optional_argument(const keyword& key, const std::string& description)
     : argument(key, description)
 {
-    update_keyword(verify_argument_key(key));
 };
 
 optional_argument::optional_argument(const optional_argument& rhs) 
@@ -460,7 +450,6 @@ optional_argument::optional_argument(const optional_argument& rhs)
 mandatory_argument::mandatory_argument(const keyword& key, const std::string& description)
     : argument(key, description)
 {
-    update_keyword(verify_argument_key(key));
 };
 
 mandatory_argument::mandatory_argument(const mandatory_argument& rhs) 
@@ -613,15 +602,16 @@ auto parser::check_value_type(const std::string& key, const std::string& arg)
         return std::make_pair<>(parser::one_string, arg.substr(key.length()));
 }
 
-template<class T>
-auto parser::find_option(const std::string& arg, T begin, T end)
+template<typename T>
+auto parser::parse_argument_value(const std::string& arg, T begin, T end)
 {
     argument_value_type value_type = none;
     std::string value;
     auto a = std::find_if(begin, end, [&](const argument& item) 
     { 
-        auto key = item.get_key().get_key();
-        auto abbr = item.get_key().get_abbreviation();
+        auto keyword = verify_argument_key(item.get_key());
+        auto key = keyword.get_key();
+        auto abbr = keyword.get_abbreviation();
 
         // argument key and value seperated by whitespace
         if (key == arg || (abbr.has_value() && abbr.value() == arg)) {
@@ -648,10 +638,10 @@ auto parser::find_option(const std::string& arg, T begin, T end)
     return std::make_tuple<>(a != end ? (argument*) &(*a) : nullptr, value_type, value);
 }
 
-auto parser::find_option(const std::string& arg)
+auto parser::parse_argument_value(const std::string& arg)
 {    
-    auto [mandatory_arg, mandatory_type, madatory_value] = find_option(arg, m_mandatories.begin(), m_mandatories.end());
-    auto [optional_arg, optional_type, optional_value]  = find_option(arg, m_optionals.begin(), m_optionals.end());
+    auto [mandatory_arg, mandatory_type, madatory_value] = parse_argument_value(arg, m_mandatories.begin(), m_mandatories.end());
+    auto [optional_arg, optional_type, optional_value]  = parse_argument_value(arg, m_optionals.begin(), m_optionals.end());
     return std::make_tuple<>((argument*)((uintptr_t) mandatory_arg | (uintptr_t) optional_arg), mandatory_type | optional_type, mandatory_arg ? madatory_value : optional_value);
 }
 
@@ -659,7 +649,7 @@ void parser::parse_options(std::vector<std::string>& args)
 {
     auto it = args.begin();
     while (it != args.end()) {
-        auto [argument, type, value] = find_option(*it);
+        auto [argument, type, value] = parse_argument_value(*it);
         if (argument) {
             argument->mark_parsed();
             switch (type)
@@ -704,6 +694,44 @@ void parser::check_mandatory()
     for (auto &mandatory : m_mandatories)
         if (!mandatory.is_parsed())
             throw argcpp17_exception(argcpp17_exception::err_missing_madatory);
+}
+
+template<typename T>
+auto parser::find_option(const keyword& key, T begin, T end)
+{
+    return std::find_if(begin, end, [&](const argument& item) 
+    { 
+        return item == key;
+    });
+}
+
+template<typename T>
+std::optional<T> parser::get_value(const keyword& key)
+{
+    {
+        auto it = find_option(key, m_optionals.begin(), m_optionals.end());
+        if (it != m_optionals.end())
+            return it->value<T>();
+    }
+    {
+        auto it = find_option(key, m_mandatories.begin(), m_mandatories.end());
+        if (it != m_mandatories.end())
+            return it->value<T>();
+    }
+    {
+        auto it = find_option(key, m_positionals.begin(), m_positionals.end());
+        if (it != m_positionals.end())
+            return it->value<T>();
+    }
+    return std::nullopt;
+}
+
+bool parser::get_flag(const keyword& key)
+{
+    auto it = find_option(key, m_flags.begin(), m_flags.end());
+    if (it != m_flags.end())
+        return it->is_set();
+    return false;
 }
 
 #endif
