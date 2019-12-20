@@ -1,4 +1,6 @@
-![Build Status](https://github.com/cemoktra/argcpp17/workflows/CPP/badge.svg)
+[![Build Status](https://github.com/cemoktra/argcpp17/workflows/CPP/badge.svg)](https://github.com/cemoktra/argcpp17/actions?query=workflow%3ACPP)
+
+
 
 # argcpp17
 argcpp17 is a command line parser using c++17 features. It supports sub-commands, flags, mandatory and optional arguments and positional arguments.
