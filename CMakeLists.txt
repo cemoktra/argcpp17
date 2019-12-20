@@ -5,6 +5,9 @@ project(argcpp17 VERSION 0.1.0)
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
+enable_testing()
+include(GoogleTest)
+
 set(ARGCPP17_INCLUDE_DIR ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 set(ARGCPP17_HEADERS
@@ -23,4 +26,4 @@ target_link_libraries(argcpp17_example argcpp17)
 
 add_executable(argcpp17_test test/test.cpp)
 target_link_libraries(argcpp17_test gtest_main argcpp17)
-add_test(NAME argcpp17_test COMMAND UnitTests)
+gtest_add_tests(TARGET argcpp17_test TEST_SUFFIX .noArgs TEST_LIST noArgsTests)
