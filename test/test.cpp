@@ -182,50 +182,106 @@ TEST(subcommand_test, get_parser)
     EXPECT_EQ(p.positionals(), 0);
 }
 
-TEST(optional_test, constructor_param)
+class optional_test : public ::testing::Test {
+public:
+    optional_test()
+        : sut({KEY, ABBR}, DESC)
+    {};
+    ~optional_test() = default;
+
+    class derived_optional : public optional_argument
+    {
+    public:
+        derived_optional(const keyword& key, const std::string& description) : optional_argument(key, description) {};
+        derived_optional(const derived_optional& rhs) : optional_argument(rhs) {};
+
+        using argument::update_value;
+    };
+
+protected:
+    derived_optional sut;
+};
+
+TEST_F(optional_test, constructor_param)
 {
-    optional_argument opt({KEY, ABBR}, DESC);
-    EXPECT_EQ(opt.value(), std::nullopt);
+    EXPECT_EQ(sut.value<std::string>(), std::nullopt);
 }
 
-TEST(optional_test, update_value)
+TEST_F(optional_test, update_value)
 {
-    optional_argument opt({KEY, ABBR}, DESC);
-    EXPECT_EQ(opt.value(), std::nullopt);
-    opt.update_value(VALUE);
-    EXPECT_EQ(opt.value(), VALUE);
+    EXPECT_EQ(sut.value<std::string>(), std::nullopt);
+    sut.update_value(VALUE);
+    EXPECT_EQ(sut.value<std::string>(), VALUE);
 }
 
-TEST(mandatory_test, constructor_param)
+class mandatory_test : public ::testing::Test {
+public:
+    mandatory_test()
+        : sut({KEY, ABBR}, DESC)
+    {};
+    ~mandatory_test() = default;
+
+    class derived_mandatory : public mandatory_argument
+    {
+    public:
+        derived_mandatory(const keyword& key, const std::string& description) : mandatory_argument(key, description) {};
+        derived_mandatory(const derived_mandatory& rhs) : mandatory_argument(rhs) {};
+
+        using argument::update_value;
+    };
+
+protected:
+    derived_mandatory sut;
+};
+
+TEST_F(mandatory_test, constructor_param)
 {
-    mandatory_argument man({KEY, ABBR}, DESC);
-    EXPECT_TRUE(man.value().empty());
+    EXPECT_TRUE(sut.value<std::string>().empty());
 }
 
-TEST(mandatory_test, update_value)
+TEST_F(mandatory_test, update_value)
 {
-    mandatory_argument man({KEY, ABBR}, DESC);
-    EXPECT_TRUE(man.value().empty());
-    man.update_value(VALUE);
-    EXPECT_FALSE(man.value().empty());
-    EXPECT_EQ(man.value(), VALUE);
+    EXPECT_TRUE(sut.value<std::string>().empty());
+    sut.update_value(VALUE);
+    EXPECT_FALSE(sut.value<std::string>().empty());
+    EXPECT_EQ(sut.value<std::string>(), VALUE);
 }
 
-TEST(positional_test, constructor_param)
+
+class positional_test : public ::testing::Test {
+public:
+    positional_test()
+        : sut(KEY, DESC)
+    {};
+    ~positional_test() = default;
+
+    class derived_positional : public positional_argument
+    {
+    public:
+        derived_positional(const std::string& name, const std::string& description) : positional_argument(name, description) {};
+        derived_positional(const derived_positional& rhs) : positional_argument(rhs) {};
+
+        using argument::update_value;
+    };
+
+protected:
+    derived_positional sut;
+};
+
+
+TEST_F(positional_test, constructor_param)
 {
-    positional_argument pos(KEY, DESC);
-    EXPECT_EQ(pos.get_key().get_key(), KEY);
-    EXPECT_EQ(pos.get_key().get_abbreviation(), std::nullopt);
-    EXPECT_TRUE(pos.value().empty());
+    EXPECT_EQ(sut.get_key().get_key(), KEY);
+    EXPECT_EQ(sut.get_key().get_abbreviation(), std::nullopt);
+    EXPECT_TRUE(sut.value<std::string>().empty());
 }
 
-TEST(positional_test, update_value)
+TEST_F(positional_test, update_value)
 {
-    positional_argument pos(KEY, DESC);
-    EXPECT_TRUE(pos.value().empty());
-    pos.update_value(VALUE);
-    EXPECT_FALSE(pos.value().empty());
-    EXPECT_EQ(pos.value(), VALUE);
+    EXPECT_TRUE(sut.value<std::string>().empty());
+    sut.update_value(VALUE);
+    EXPECT_FALSE(sut.value<std::string>().empty());
+    EXPECT_EQ(sut.value<std::string>(), VALUE);
 }
 
 class parser_test : public ::testing::Test {

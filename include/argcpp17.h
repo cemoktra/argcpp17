@@ -1,7 +1,6 @@
 #ifndef _ARGCPP17_H_
 #define _ARGCPP17_H_
 
-#include <map>
 #include <vector>
 #include <string>
 #include <string_view>
@@ -10,11 +9,17 @@
 #include <iostream>
 #include <stdexcept>
 #include <functional>
-
+#include <inttypes.h>
 
 // ====================================================
 // DECLARATIONS
 // ====================================================
+
+template<class T>
+T parse_value(const std::string& value);
+
+template<class T>
+std::optional<T> parse_value(const std::optional<std::string>& value);
 
 // class representing an argcpp17 exception
 class argcpp17_exception : public std::exception
@@ -70,7 +75,7 @@ std::ostream& operator<<(std::ostream& os, const keyword& key) {
 }
 
 class argument {
-friend class parser;
+    friend class parser;
 
 public:
     argument() = delete;
@@ -112,6 +117,8 @@ std::ostream& operator<<(std::ostream& os, const argument& command) {
 // use template here to resolve cyclic dependencies
 template<class T>
 class subcommand : public argument {
+    friend class parser;
+
 public:
     subcommand() = delete;
     subcommand(const keyword& key, const std::string& description);
@@ -139,14 +146,18 @@ public:
 // class representing an optional argument
 //TODO: as template or std::variant
 class optional_argument : public argument {
+    friend class parser;
+
 public:
     optional_argument() = delete;
     optional_argument(const keyword& key, const std::string& description);
     optional_argument(const optional_argument& rhs);
     ~optional_argument() = default;
 
-    inline std::optional<std::string> value() const { return m_value; }
+    template<class T>
+    inline std::optional<T> value() { return parse_value<T>(m_value); }
 
+protected:
     void update_value(const std::optional<std::string>& value) override  { m_value = value; }
     void reset() override { argument::reset(); m_value = std::nullopt; }
 
@@ -158,14 +169,18 @@ private:
 // class representing an mandatory argument
 //TODO: as template or std::variant
 class mandatory_argument : public argument {
+    friend class parser;
+
 public:
     mandatory_argument() = delete;
     mandatory_argument(const keyword& key, const std::string& description);
     mandatory_argument(const mandatory_argument& rhs);
     ~mandatory_argument() = default;
 
-    inline std::string value() const { return m_value; }
+    template<class T>
+    inline T value() { return parse_value<T>(m_value); }
 
+protected:
     void update_value(const std::optional<std::string>& value) override { m_value = value.value(); }
     void reset() override { 
         argument::reset(); 
@@ -180,14 +195,18 @@ private:
 // class representing a positional argument
 //TODO: as template or std::variant
 class positional_argument : public argument {
+    friend class parser;
+
 public:
     positional_argument() = delete;
     positional_argument(const std::string& name, const std::string& description);
     positional_argument(const positional_argument& rhs);
     ~positional_argument() = default;
 
-    inline std::string value() const { return m_value; }
+    template<class T>
+    inline T value() { return parse_value<T>(m_value); }
 
+protected:
     void update_value(const std::optional<std::string>& value) override  { m_value = value.value(); }
     void reset() override { argument::reset(); m_value = std::string(); }
 
@@ -261,6 +280,53 @@ private:
 // ====================================================
 // IMPLEMENTATIONS
 // ====================================================
+
+template<>
+intmax_t parse_value(const std::string& value)
+{
+    char *endptr;
+    return strtoimax(value.c_str(), &endptr, 10);
+}
+
+
+template<>
+std::optional<intmax_t> parse_value(const std::optional<std::string>& value)
+{
+    char *endptr;
+    if (!value.has_value())
+        return std::nullopt;
+    return strtoimax(value.value().c_str(), &endptr, 10);
+}
+
+
+template<>
+uintmax_t parse_value(const std::string& value)
+{
+    char *endptr;
+    return strtoumax(value.c_str(), &endptr, 10);
+}
+
+template<class T>
+T parse_value(const std::string& value)
+{
+    std::istringstream iss(value);
+    T casted;
+    iss >> casted;
+    return casted;
+}
+
+
+template<class T>
+std::optional<T> parse_value(const std::optional<std::string>& value)
+{
+    if (!value.has_value())
+        return std::nullopt;
+    std::istringstream iss(value.value());
+    T casted;
+    iss >> casted;
+    return casted;
+}
+
 
 //argcpp17_exception implementations
 argcpp17_exception::argcpp17_exception(argcpp17_error error) 
