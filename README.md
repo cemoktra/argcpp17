@@ -8,7 +8,10 @@ int main(int argc, char **args)
 {
   parser cmdline;
   cmdline.add_flag({"flag1"}, "description")
-         .add_flag({"flag2", "f2"}, "another description");
+         .add_flag({"flag2", "f2"}, "another description")
+         .add_option({"option", "o"}, "some double value");
   cmdline.parse(argc, args);
+  cmdline.get_flag({"f2"});
+  cmdline.get_value<double>({"option"});
 }
 ```
