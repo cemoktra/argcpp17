@@ -1,4 +1,4 @@
-[![Build Status](https://github.com/cemoktra/argcpp17/workflows/CPP/badge.svg)](https://github.com/cemoktra/argcpp17/actions?query=workflow%3ACPP)
+[![Build Status](https://github.com/cemoktra/argcpp17/workflows/CI/badge.svg)](https://github.com/cemoktra/argcpp17/actions)
 
 
 
