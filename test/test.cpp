@@ -480,3 +480,78 @@ TEST_F(parser_test, parse_posistionals)
     args = {ABBR, KEY, ANOTHER_KEY};
     EXPECT_NO_THROW(sut.parse_vector(args));
 }
+
+TEST_F(parser_test, parse_values)
+{
+    std::vector<std::string> args;
+
+    sut.add_flag({"flag", "f"}, "")
+       .add_optional_argument({"double", "d"}, "")
+       .add_optional_argument({"string", "s"}, "")
+       .add_optional_argument({"uintmax", "u"}, "")
+       .add_optional_argument({"int32", "i"}, "");
+    
+
+    args = {"f", 
+            "-d", "3.14",
+            "-shello world",
+            "-u=10",
+            "-i:-3"
+            };
+    EXPECT_NO_THROW(sut.parse_vector(args));
+
+    // check flags
+    EXPECT_TRUE(sut.get_flag({"flag"}));
+    EXPECT_TRUE(sut.get_flag({"f"}));
+    EXPECT_TRUE(sut.get_flag({"flag", "f"}));
+    EXPECT_FALSE(sut.get_flag({"another_flag"}));
+
+    EXPECT_FALSE(sut.get_value<double>({"abother_option"}).has_value());
+    // check double option
+    {
+        auto value = sut.get_value<double>({"d"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), 3.14);
+    }
+    {
+        auto value = sut.get_value<double>({"double"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), 3.14);
+    }
+
+    // check uintmax option
+    {
+        auto value = sut.get_value<uintmax_t>({"u"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), 10);
+    }
+    {
+        auto value = sut.get_value<uintmax_t>({"uintmax"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), 10);
+    }
+
+    // check string option
+    {
+        auto value = sut.get_value<std::string>({"s"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), "hello world");
+    }
+    {
+        auto value = sut.get_value<std::string>({"string"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), "hello world");
+    }
+
+        // check uintmax option
+    {
+        auto value = sut.get_value<int32_t>({"i"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), -3);
+    }
+    {
+        auto value = sut.get_value<int32_t>({"int32"});
+        EXPECT_TRUE(value.has_value());
+        EXPECT_EQ(value.value(), -3);
+    }
+}
