@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/cemoktra/argcpp17.svg?branch=master)](https://travis-ci.org/cemoktra/argcpp17)
+
 # argcpp17
 argcpp17 is a command line parser using c++17 features. It supports sub-commands, flags, mandatory and optional arguments and positional arguments.
 
