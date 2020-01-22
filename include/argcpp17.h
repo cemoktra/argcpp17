@@ -684,6 +684,7 @@ void parser::parse_positionals(std::vector<std::string>& args)
     auto pos = m_positionals.begin();
     while (arg != args.end()) {
         pos->update_value(*arg);
+        pos->mark_parsed();
         arg++;
         pos++;
     }
