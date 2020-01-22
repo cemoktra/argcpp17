@@ -17,8 +17,12 @@ jobs:
         submodules: true
     - name: install packages
       run: sudo apt-get install googletest
-    - name: build gtest
-      run: cd /usr/src/gtest && sudo cmake CMakeLists.txt && sudo make && sudo cp *.a /usr/lib
+    - name: cmake gtest
+      run: cd /usr/src/gtest && sudo cmake CMakeLists.txt
+    - name: make gtest
+      run: sudo make
+    - name: gtest libs
+      run: sudo cp *.a /usr/lib
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
