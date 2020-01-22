@@ -14,7 +14,7 @@ set(ARGCPP17_HEADERS
     ${ARGCPP17_INCLUDE_DIR}/argcpp17.h
 )
 
-add_subdirectory(googletest EXCLUDE_FROM_ALL)
+find_package(gtest REQUIRED)
 
 add_library(argcpp17 INTERFACE)
 target_include_directories(argcpp17 INTERFACE

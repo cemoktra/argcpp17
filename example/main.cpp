@@ -1,6 +1,15 @@
 #include <argcpp17.h>
 #include <iostream>
 
+#include <experimental/source_location>
+
+enum COLOR
+{
+    RED,
+    GREEN,
+    BLUE
+};
+
 int main(int argc, char **args)
 {
     parser p;
