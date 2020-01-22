@@ -12,7 +12,10 @@ jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     steps:
-    - uses: CyberZHG/github-action-gtest@0.0.1
+    - name: install packages
+      run: sudo apt-get install googletest
+    - name: install packages
+      run: ls /usr/src/gtest
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
