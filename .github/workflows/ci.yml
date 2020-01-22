@@ -15,11 +15,11 @@ jobs:
     - name: install packages
       run: sudo apt-get install libgtest-dev
     - name: cmake gtest
-      run: cd /usr/src/gtest && sudo cmake CMakeLists.txt
+      run: sudo cmake /usr/src/gtest/CMakeLists.txt
     - name: make gtest
       run: cd /usr/src/googletest && sudo make
     - name: gtest postbuild
-      run: ls /usr/src/googletest
+      run: ls
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
