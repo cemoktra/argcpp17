@@ -465,7 +465,7 @@ TEST_F(parser_test, parse_posistionals)
        .add_positional(ANOTHER_KEY, DESC);
 
     args = {KEY, ANOTHER_KEY};
-    EXPECT_NO_THROW(sut.parse_vector(args));
+    EXPECT_THROW(sut.parse_vector(args), argcpp17_exception);
 
     args = {ANOTHER_KEY};
     EXPECT_THROW(sut.parse_vector(args), argcpp17_exception);
@@ -478,7 +478,7 @@ TEST_F(parser_test, parse_posistionals)
 
     sut.add_flag({ABBR}, DESC);
     args = {ABBR, KEY, ANOTHER_KEY};
-    EXPECT_NO_THROW(sut.parse_vector(args));
+    EXPECT_THROW(sut.parse_vector(args), argcpp17_exception);
 }
 
 TEST_F(parser_test, parse_values)
