@@ -15,7 +15,7 @@ jobs:
     - name: install packages
       run: sudo apt-get install googletest
     - name: install packages
-      run: ls /usr/src/gtest
+      run: ls /usr/src/googletest
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
