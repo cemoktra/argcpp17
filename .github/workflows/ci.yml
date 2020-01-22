@@ -16,7 +16,7 @@ jobs:
       with:
         submodules: true
     - name: install packages
-      run: sudo apt-get install libgtest-dev googletest
+      run: sudo apt-get install libgtest-dev
     - name: configure
       run: mkdir build && cd build && cmake ..
     - name: build
