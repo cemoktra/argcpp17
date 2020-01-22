@@ -13,9 +13,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
     - name: install packages
-      run: sudo apt-get install googletest
+      run: sudo apt-get install libgtest-dev
     - name: install packages
-      run: ls /usr/src/googletest
+      run: ls /usr/src/gtest
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
