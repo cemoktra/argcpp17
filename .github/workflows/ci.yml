@@ -15,11 +15,9 @@ jobs:
     - name: install packages
       run: sudo apt-get install libgtest-dev
     - name: cmake gtest
-      run: sudo cmake /usr/src/gtest/CMakeLists.txt
-    - name: make gtest
-      run: cd /usr/src/googletest && sudo make
+      run: sudo cmake /usr/src/gtest/CMakeLists.txt && sudo make -C /usr/src/gtest
     - name: gtest postbuild
-      run: ls
+      run: ls /usr/src/gtest/
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
