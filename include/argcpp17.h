@@ -30,7 +30,8 @@ public:
         err_unknown_arguments,
         err_missing_positionals,
         err_subcommand_not_found,
-        err_missing_madatory,
+        err_missing_mandatory,
+        err_missing_positional,
     };
 
     argcpp17_exception(argcpp17_error error = err_unknown);
@@ -268,6 +269,7 @@ private:
     auto find_option(const keyword& key, T begin, T end);
 
     void check_mandatory();
+    void check_positional();
     void check_keyword(const keyword& key);
     auto check_value_type(const std::string& key, const std::string& arg);
 
@@ -334,8 +336,10 @@ const char* argcpp17_exception::what() const noexcept
             return "missing positional argumenzs";
         case err_subcommand_not_found:
             return "subcommand not found";
-        case err_missing_madatory:
+        case err_missing_mandatory:
             return "missing mandatory argument";
+        case err_missing_positional:
+            return "missing positional argument";
         default:
             return "unknown error in argcpp17";
     }
@@ -548,16 +552,13 @@ void parser::parse_vector(std::vector<std::string>& args)
     for (auto &it : m_mandatories) it.reset();
     for (auto &it : m_positionals) it.reset();
 
-    // no arguments, return
-    if (!args.size())
-        return;
-
-    //  we hit a subcommand, so we are done here
-    if (parse_subcommand(args))
-        return;
+    if (args.size())
+        //  we hit a subcommand, so we are done here
+        if (parse_subcommand(args))
+            return;
     parse_options(args);
     parse_flags(args);
-    parse_positionals(args);
+    parse_positionals(args);    
 }
 
 bool parser::parse_subcommand(std::vector<std::string>& args)
@@ -669,7 +670,7 @@ void parser::parse_options(std::vector<std::string>& args)
         } else 
             it++;
     }
-    check_mandatory();
+    check_mandatory();    
 }
 
 void parser::parse_positionals(std::vector<std::string>& args)
@@ -686,13 +687,21 @@ void parser::parse_positionals(std::vector<std::string>& args)
         arg++;
         pos++;
     }
+    check_positional();
+}
+
+void parser::check_positional()
+{
+    for (auto &positional : m_positionals)
+        if (!positional.is_parsed())
+            throw argcpp17_exception(argcpp17_exception::err_missing_positional);
 }
 
 void parser::check_mandatory()
 {
     for (auto &mandatory : m_mandatories)
         if (!mandatory.is_parsed())
-            throw argcpp17_exception(argcpp17_exception::err_missing_madatory);
+            throw argcpp17_exception(argcpp17_exception::err_missing_mandatory);
 }
 
 template<typename T>
