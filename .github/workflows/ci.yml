@@ -14,8 +14,8 @@ jobs:
     steps:
     - name: install packages
       run: sudo apt-get install libgtest-dev
-    - name: install packages
-      run: ls /usr/src/gtest
+    - name: cmake gtest
+      run: cd /usr/src/gtest && sudo cmake CMakeLists.txt
     - name: configure 
       run: mkdir build && cd build && cmake ..
     - name: build
