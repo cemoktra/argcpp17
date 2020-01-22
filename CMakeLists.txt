@@ -25,5 +25,5 @@ add_executable(argcpp17_example example/main.cpp)
 target_link_libraries(argcpp17_example argcpp17)
 
 add_executable(argcpp17_test test/test.cpp)
-target_link_libraries(argcpp17_test gtest_main argcpp17)
+target_link_libraries(argcpp17_test ${GTEST_LIBRARY} pthread argcpp17)
 gtest_add_tests(TARGET argcpp17_test TEST_SUFFIX .noArgs TEST_LIST noArgsTests)
