@@ -12,6 +12,7 @@ jobs:
   build-ubuntu:
     runs-on: ubuntu-latest
     steps:
+    - uses: actions/checkout@v1
     - name: install packages
       run: sudo apt-get install libgtest-dev
     - name: cmake gtest
