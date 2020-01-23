@@ -502,10 +502,10 @@ void parser::usage(const std::string& app_name)
             auto desc = i.get_description();
             auto full_key = key.get_key();
             auto abbr_key = key.get_abbreviation();
-            std::cout << "  " << full_key;
+            std::cout << "  [-" << full_key;
             if (abbr_key.has_value())
-                std::cout << ", " << abbr_key.value();
-            std::cout << ": " << desc;
+                std::cout << ", -" << abbr_key.value();
+            std::cout << "]<value>: " << desc;
         }
     }
 
@@ -516,10 +516,10 @@ void parser::usage(const std::string& app_name)
             auto desc = i.get_description();
             auto full_key = key.get_key();
             auto abbr_key = key.get_abbreviation();
-            std::cout << "  " << full_key;
+            std::cout << "  [-" << full_key;
             if (abbr_key.has_value())
-                std::cout << ", " << abbr_key.value();
-            std::cout << ": " << desc;
+                std::cout << ", -" << abbr_key.value();
+            std::cout << "]<value>: " << desc;
         }
     }
 
