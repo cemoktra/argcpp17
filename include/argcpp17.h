@@ -221,7 +221,7 @@ public:
     parser(const parser& rhs) = default;
     ~parser() = default;
 
-    void usage();
+    void usage(const std::string& app_name);
     void parse(int argc, char **args);
     
     inline size_t subcommands() { return m_subcommands.size(); }
@@ -473,8 +473,83 @@ positional_argument::positional_argument(const positional_argument& rhs)
 
 
 //parser implementations
-void parser::usage()
+void parser::usage(const std::string& app_name)
 {
+    std::cout << app_name << " [sub-command] <mandatory_options> [options/flags]";
+    for (auto positional : m_positionals)
+        std::cout << " " << positional.m_key.get_key();
+    std::cout << std::endl;
+    std::cout << std::endl;
+
+    if (m_subcommands.size()) {
+        std::cout << "sub-commands:" << std::endl;
+        for (auto i : m_subcommands) {
+            auto key = i.get_key();
+            auto desc = i.get_description();
+            auto full_key = key.get_key();
+            auto abbr_key = key.get_abbreviation();
+            std::cout << "  " << full_key;
+            if (abbr_key.has_value())
+                std::cout << ", " << abbr_key.value();
+            std::cout << ": " << desc;
+        }
+    }
+
+    if (m_mandatories.size()) {
+        std::cout << "mandatory options:" << std::endl;
+        for (auto i : m_mandatories) {
+            auto key = i.get_key();
+            auto desc = i.get_description();
+            auto full_key = key.get_key();
+            auto abbr_key = key.get_abbreviation();
+            std::cout << "  " << full_key;
+            if (abbr_key.has_value())
+                std::cout << ", " << abbr_key.value();
+            std::cout << ": " << desc;
+        }
+    }
+
+    if (m_optionals.size()) {
+        std::cout << "options:" << std::endl;
+        for (auto i : m_mandatories) {
+            auto key = i.get_key();
+            auto desc = i.get_description();
+            auto full_key = key.get_key();
+            auto abbr_key = key.get_abbreviation();
+            std::cout << "  " << full_key;
+            if (abbr_key.has_value())
+                std::cout << ", " << abbr_key.value();
+            std::cout << ": " << desc;
+        }
+    }
+
+    if (m_optionals.size()) {
+        std::cout << "flags:" << std::endl;
+        for (auto i : m_flags) {
+            auto key = i.get_key();
+            auto desc = i.get_description();
+            auto full_key = key.get_key();
+            auto abbr_key = key.get_abbreviation();
+            std::cout << "  " << full_key;
+            if (abbr_key.has_value())
+                std::cout << ", " << abbr_key.value();
+            std::cout << ": " << desc;
+        }
+    }
+
+    if (m_positionals.size()) {
+        std::cout << "positional arguments:" << std::endl;
+        for (auto i : m_positionals) {
+            auto key = i.get_key();
+            auto desc = i.get_description();
+            auto full_key = key.get_key();
+            auto abbr_key = key.get_abbreviation();
+            std::cout << "  " << full_key;
+            if (abbr_key.has_value())
+                std::cout << ", " << abbr_key.value();
+            std::cout << ": " << desc;
+        }
+    }
 }
 
 void parser::parse(int argc, char **args) {
